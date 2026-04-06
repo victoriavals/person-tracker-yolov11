@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environment
+venv/
+env/
+.env
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model Weights (besar, tidak perlu di-commit)
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.claude
+
+# Output files
+output/
+
+# FiftyOne dataset cache
+~/fiftyone/
+.fiftyone/
+
+# YOLO runs
+runs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+das.txt
