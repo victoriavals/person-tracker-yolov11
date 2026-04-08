@@ -57,3 +57,6 @@ logs/
 *.tmp
 *.temp
 das.txt
+
+# Dataset
+/Person Tracking - CCTV.v1i.yolov11
