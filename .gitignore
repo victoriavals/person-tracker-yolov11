@@ -57,6 +57,7 @@ logs/
 *.tmp
 *.temp
 das.txt
+PENJELASAN.md
 
 # Dataset
 /Person Tracking - CCTV.v1i.yolov11
