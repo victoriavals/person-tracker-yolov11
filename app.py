@@ -27,16 +27,16 @@ with st.sidebar:
         "🤖 Model",
         options=list(MODEL_OPTIONS.keys()),
         index=0,
-        help="yolo11n paling cepat dan aman untuk Streamlit Cloud.",
+        help="Pilih model. Model fine-tuned dilatih khusus pada 3.000 gambar COCO (kelas person).",
     )
     model_name = MODEL_OPTIONS[model_label]
 
-    # Warning untuk model besar di Streamlit Cloud
-    if model_name in ("yolo11m",):
-        st.warning(
-            "⚠️ **yolo11m** membutuhkan RAM lebih besar (~600MB+). "
-            "Mungkin crash di Streamlit Cloud (limit 1GB).",
-            icon="⚠️",
+    if model_label.startswith("✅"):
+        st.success(
+            "Model ini sudah **di-fine-tune** pada dataset COCO Person "
+            "(3.000 gambar, 50 epoch + tuning). "
+            "mAP@0.5 = **0.739**",
+            icon="✅",
         )
 
     st.divider()
@@ -60,8 +60,8 @@ with st.sidebar:
     )
 
     st.divider()
-    st.caption("**Person Tracker — YOLOv11 + ByteTrack**")
-    st.caption("Model pretrained COCO-2017 (80 classes)")
+    st.caption("**Person Tracker — YOLOv11s + ByteTrack**")
+    st.caption("Fine-tuned pada COCO-2017 Person (3.000 gambar)")
 
 # ─── Load Model ─────────────────────────────────────────────────────────────
 model = load_model(model_name)
@@ -276,90 +276,113 @@ with tab_tracking:
 # TAB 3: BENCHMARK
 # ════════════════════════════════════════════════════════════════════════════
 with tab_benchmark:
-    st.subheader("Hasil Evaluasi Model (Pre-computed)")
+    st.subheader("Hasil Evaluasi Model Fine-tuned")
     st.markdown(
-        "Hasil evaluasi dihitung pada **200 gambar COCO-2017 validation set** "
-        "menggunakan model **yolo11m** dengan threshold confidence=0.25, IoU=0.5."
+        "Hasil evaluasi model **YOLOv11s yang sudah di-fine-tune** "
+        "pada **3.000 gambar COCO-2017** (kelas `person`), "
+        "diuji pada **test set** yang tidak pernah dilihat model. "
+        "Confidence = 0.25, IoU = 0.5."
     )
 
-    # ── Metrik Deteksi ────────────────────────────────────────────────────
-    st.markdown("### 🎯 Metrik Deteksi")
+    # ── Metrik Utama ──────────────────────────────────────────────────────
+    st.markdown("### 🎯 Metrik Model Terbaik (Strategy A — Epoch 38)")
     b1, b2, b3, b4 = st.columns(4)
-    b1.metric("Precision", "80.4%", help="TP / (TP + FP)")
-    b2.metric("Recall", "73.4%", help="TP / (TP + FN)")
-    b3.metric("F1 Score", "0.768", help="2 × Precision × Recall / (Precision + Recall)")
-    b4.metric("Mean IoU (TP)", "0.869", help="Rata-rata IoU untuk True Positive")
+    b1.metric("mAP@0.5", "0.739", help="Mean Average Precision pada IoU threshold 0.5")
+    b2.metric("mAP@0.5:0.95", "0.493", help="mAP rata-rata pada berbagai IoU threshold (lebih ketat)")
+    b3.metric("Precision", "77.3%", help="TP / (TP + FP) — seberapa tepat prediksi")
+    b4.metric("Recall", "67.4%", help="TP / (TP + FN) — seberapa banyak objek berhasil ditemukan")
 
     st.divider()
 
-    # ── Metrik Tracking ───────────────────────────────────────────────────
-    st.markdown("### 🎬 Metrik Tracking (ByteTrack)")
-    t1, t2, t3 = st.columns(3)
-    t1.metric("Unique Person IDs", "19", help="Dalam 30 frame video sintetis")
-    t2.metric("Total Frame", "30", help="Video sintetis dari COCO images")
-    t3.metric("Avg Confidence (Tracking)", "0.776")
+    # ── Perbandingan Train vs Tune ─────────────────────────────────────────
+    st.markdown("### 📈 Perbandingan: Original vs Fine-tuned (Strategy A)")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Model Original (person_yolo11s_v1)**")
+        st.markdown("""
+| Metrik | Nilai |
+|--------|-------|
+| mAP@0.5 | 0.731 |
+| mAP@0.5:0.95 | 0.480 |
+| Best Epoch | 46 / 50 |
+""")
+    with c2:
+        st.markdown("**Model Fine-tuned (Strategy A) ✅**")
+        st.markdown("""
+| Metrik | Nilai |
+|--------|-------|
+| mAP@0.5 | **0.739** (+0.008) |
+| mAP@0.5:0.95 | **0.493** (+0.013) |
+| Best Epoch | **38** / 43 (lebih cepat converge) |
+""")
 
     st.divider()
 
-    # ── Grafik dari output/ ────────────────────────────────────────────────
-    st.markdown("### 📊 Visualisasi Hasil")
+    # ── Grafik Evaluasi ────────────────────────────────────────────────────
+    st.markdown("### 📊 Grafik Evaluasi")
 
-    output_dir = Path("output")
+    eval_dir = Path("files/runs/detect/runs/eval/test_eval")
+    train_dir = Path("files/runs/detect/runs/train/person_yolo11s_v1")
+    tune_dir  = Path("files/runs/detect/runs/tune/strategy_A")
+    custom_eval_dir = Path("files/runs/eval/test_eval")
 
-    col_det, col_track = st.columns(2)
+    col1, col2 = st.columns(2)
+    with col1:
+        pr_img = eval_dir / "BoxPR_curve.png"
+        if pr_img.exists():
+            st.markdown("**Precision-Recall Curve**")
+            st.image(str(pr_img), use_container_width=True)
+            st.caption("Area di bawah kurva = mAP. Semakin ke kanan atas semakin baik.")
 
-    eval_img = output_dir / "detection" / "evaluation_metrics.png"
-    tracking_img = output_dir / "tracking" / "tracking_statistics.png"
-    sample_frames = output_dir / "tracking" / "sample_frames.png"
-    trajectory_img = output_dir / "tracking" / "trajectory.png"
+    with col2:
+        f1_img = eval_dir / "BoxF1_curve.png"
+        if f1_img.exists():
+            st.markdown("**F1-Confidence Curve**")
+            st.image(str(f1_img), use_container_width=True)
+            st.caption("Titik tertinggi menunjukkan threshold confidence optimal.")
 
-    with col_det:
-        if eval_img.exists():
-            st.markdown("**Evaluasi Deteksi (200 gambar COCO)**")
-            st.image(str(eval_img), width='stretch')
-        else:
-            st.info("Jalankan notebook `full.ipynb` untuk menghasilkan grafik evaluasi.")
+    col3, col4 = st.columns(2)
+    with col3:
+        cm_img = eval_dir / "confusion_matrix_normalized.png"
+        if cm_img.exists():
+            st.markdown("**Confusion Matrix (Test Set)**")
+            st.image(str(cm_img), use_container_width=True)
+            st.caption("Seberapa sering model benar/salah mendeteksi orang.")
 
-    with col_track:
-        if tracking_img.exists():
-            st.markdown("**Analisis Tracking (ByteTrack)**")
-            st.image(str(tracking_img), width='stretch')
-        else:
-            st.info("Jalankan notebook `full.ipynb` untuk menghasilkan grafik tracking.")
+    with col4:
+        iou_img = custom_eval_dir / "iou_distribution.png"
+        if iou_img.exists():
+            st.markdown("**Distribusi IoU**")
+            st.image(str(iou_img), use_container_width=True)
+            st.caption("Seberapa akurat posisi bounding box prediksi vs ground truth.")
 
-    if sample_frames.exists():
-        st.markdown("**Sample Frames Tracking**")
-        st.image(str(sample_frames), width='stretch')
+    # Training curves
+    curves_img = train_dir / "training_curves_custom.png"
+    if curves_img.exists():
+        st.markdown("**Kurva Training (50 Epoch)**")
+        st.image(str(curves_img), use_container_width=True)
+        st.caption("Loss menurun dan mAP meningkat menandakan model berhasil belajar.")
 
-    if trajectory_img.exists():
-        st.markdown("**Trajectory Pergerakan Person**")
-        st.image(str(trajectory_img), width='stretch')
+    # Hard cases
+    hard_img = custom_eval_dir / "hard_cases.png"
+    if hard_img.exists():
+        st.markdown("**Hard Cases — Kasus Sulit**")
+        st.image(str(hard_img), use_container_width=True)
+        st.caption("Contoh gambar yang sulit dideteksi: oklusi, kerumunan padat, objek kecil.")
 
     st.divider()
 
-    # ── Info Model ─────────────────────────────────────────────────────────
-    st.markdown("### 🤖 Perbandingan Model YOLOv11")
-    import pandas as pd
-    df_models = pd.DataFrame({
-        "Model": ["yolo11n", "yolo11s", "yolo11m", "yolo11l", "yolo11x"],
-        "Params": ["2.6M", "9.4M", "20.1M", "25.3M", "56.9M"],
-        "mAP50-95": ["39.5%", "47.0%", "51.5%", "53.4%", "54.7%"],
-        "Speed CPU (ms/img)": ["~56", "~90", "~183", "~238", "~462"],
-        "Digunakan": ["", "", "✅ (Benchmark)", "", ""],
-    })
-    st.dataframe(df_models, use_container_width=True, hide_index=True)
-
-    st.markdown("### 📚 Dataset")
-    st.markdown(
-        """
+    # ── Info Training ──────────────────────────────────────────────────────
+    st.markdown("### 🔧 Detail Training")
+    st.markdown("""
 | Properti | Detail |
 |----------|--------|
-| Dataset | COCO-2017 (Microsoft) |
-| Split digunakan | Validation set |
-| Jumlah gambar evaluasi | 200 gambar |
-| Kelas target | Person (class ID: 0) |
-| Total anotasi person | 257K+ di full dataset |
-| IoU threshold TP | 0.5 |
-| Confidence threshold | 0.25 |
-        """
-    )
+| Base model | YOLOv11s (pretrained ImageNet + COCO) |
+| Dataset | COCO-2017, kelas `person` saja |
+| Jumlah gambar | 3.000 (Train 70% / Val 15% / Test 15%) |
+| Epochs (original) | 50 epoch, imgsz=640 |
+| Epochs (Strategy A) | 43 epoch, imgsz=736, augmentasi agresif |
+| Optimizer | AdamW |
+| Hardware | GPU (CUDA) |
+| Model terbaik | `strategy_A/weights/best.pt` |
+""")
