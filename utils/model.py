@@ -3,7 +3,7 @@ from pathlib import Path
 from ultralytics import YOLO
 
 # Path ke model fine-tuned terbaik (relatif dari root repo)
-_FINETUNED_PATH = Path("files/runs/detect/runs/tune/strategy_A/weights/best.pt")
+_FINETUNED_PATH = Path("runs/detect/runs/tune/strategy_A/weights/best.pt")
 
 MODEL_OPTIONS = {
     "✅ Custom Fine-tuned (Strategy A — mAP@0.5: 0.739)": str(_FINETUNED_PATH),
