@@ -14,7 +14,7 @@ def get_color(tid: int) -> tuple:
     return _id_colors[tid]
 
 
-def draw_detections(frame: np.ndarray, boxes, confs, person_class: int = 0) -> np.ndarray:
+def draw_detections(frame: np.ndarray, boxes, confs) -> np.ndarray:
     """
     Gambar bounding box deteksi pada frame (tanpa tracking ID).
     Warna: cyan (#00D4FF) untuk semua deteksi.
