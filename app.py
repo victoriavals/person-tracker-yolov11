@@ -280,7 +280,7 @@ with tab_benchmark:
     st.markdown(
         "Hasil evaluasi model **YOLOv11s yang sudah di-fine-tune** "
         "pada **3.000 gambar COCO-2017** (kelas `person`), "
-        "diuji pada **test set** yang tidak pernah dilihat model. "
+        "dievaluasi pada **validation set** (epoch terbaik = 38). "
         "Confidence = 0.25, IoU = 0.5."
     )
 
@@ -303,7 +303,7 @@ with tab_benchmark:
 | Metrik | Nilai |
 |--------|-------|
 | mAP@0.5 | 0.731 |
-| mAP@0.5:0.95 | 0.480 |
+| mAP@0.5:0.95 | 0.477 |
 | Best Epoch | 46 / 50 |
 """)
     with c2:
@@ -312,7 +312,7 @@ with tab_benchmark:
 | Metrik | Nilai |
 |--------|-------|
 | mAP@0.5 | **0.739** (+0.008) |
-| mAP@0.5:0.95 | **0.493** (+0.013) |
+| mAP@0.5:0.95 | **0.493** (+0.016) |
 | Best Epoch | **38** / 43 (lebih cepat converge) |
 """)
 
@@ -321,10 +321,9 @@ with tab_benchmark:
     # ── Grafik Evaluasi ────────────────────────────────────────────────────
     st.markdown("### 📊 Grafik Evaluasi")
 
-    eval_dir = Path("files/runs/detect/runs/eval/test_eval")
-    train_dir = Path("files/runs/detect/runs/train/person_yolo11s_v1")
-    tune_dir  = Path("files/runs/detect/runs/tune/strategy_A")
-    custom_eval_dir = Path("files/runs/eval/test_eval")
+    eval_dir = Path("runs/detect/runs/eval/test_eval")
+    train_dir = Path("runs/detect/runs/train/person_yolo11s_v1")
+    custom_eval_dir = Path("runs/eval/test_eval")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -381,8 +380,8 @@ with tab_benchmark:
 | Dataset | COCO-2017, kelas `person` saja |
 | Jumlah gambar | 3.000 (Train 70% / Val 15% / Test 15%) |
 | Epochs (original) | 50 epoch, imgsz=640 |
-| Epochs (Strategy A) | 43 epoch, imgsz=736, augmentasi agresif |
-| Optimizer | AdamW |
+| Epochs (Strategy A) | 43 epoch (max 80 + early stop), imgsz=640, lr=0.001, patience=20 |
+| Optimizer | SGD |
 | Hardware | GPU (CUDA) |
 | Model terbaik | `strategy_A/weights/best.pt` |
 """)
