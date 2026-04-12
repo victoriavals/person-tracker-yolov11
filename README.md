@@ -39,11 +39,11 @@ Three models are selectable in the app:
 
 | Option | Weights | Notes |
 |--------|---------|-------|
-| ✅ Custom Fine-tuned (Strategy A) | `files/runs/detect/runs/tune/strategy_A/weights/best.pt` | **Recommended** — person-specific, mAP@0.5 = 0.739 |
+| ✅ Custom Fine-tuned (Strategy A) | `runs/detect/runs/tune/strategy_A/weights/best.pt` | **Recommended** — person-specific, mAP@0.5 = 0.739 |
 | yolo11n | auto-downloaded | Pretrained COCO, fastest |
 | yolo11s | auto-downloaded | Pretrained COCO, balanced |
 
-> The fine-tuned `.pt` file is not committed. Place it manually at `files/runs/detect/runs/tune/strategy_A/weights/best.pt`. Pretrained weights are downloaded automatically by Ultralytics on first use.
+> The fine-tuned `.pt` file is not committed. Place it manually at `runs/detect/runs/tune/strategy_A/weights/best.pt`. Pretrained weights are downloaded automatically by Ultralytics on first use.
 
 ---
 
@@ -68,8 +68,8 @@ person-tracker-yolov11/
 ├── 05_tuning.ipynb               # Hyperparameter tuning → Strategy A
 ├── 06_visualization.ipynb        # Hard cases, IoU distribution, trajectory visualization
 │
-├── output/finetune/dataset/      # YOLO-format dataset (images/ + labels/ split train/val/test)
-└── files/runs/detect/runs/
+├── dataset/                      # YOLO-format dataset (images/ + labels/ split train/val/test)
+└── runs/detect/runs/
     ├── train/person_yolo11s_v1/  # Initial training run (50 epochs)
     ├── eval/test_eval/           # Evaluation artifacts (PR curve, confusion matrix, hard cases)
     └── tune/strategy_A/
@@ -99,25 +99,23 @@ Labels are stored in YOLO format (`class cx cy w h`, all values 0.0–1.0). `cla
 yolo11s.pt  (pretrained, 80 COCO classes)
       │
       ▼
-Fine-tune — 50 epochs, imgsz=640, AdamW, freeze=10
+Fine-tune — 50 epochs, imgsz=640, SGD (lr=0.01), patience=10
       │
 person_yolo11s_v1  (mAP@0.5: 0.731)
       │
       ▼
 Hyperparameter Tuning — Strategy A
-imgsz=736, aggressive augmentation, 43 epochs
+resume from best.pt, max 80 epochs (stopped at 43), lr=0.001, patience=20
       │
 strategy_A/weights/best.pt  (mAP@0.5: 0.739) ✓
 ```
 
-`freeze=10` freezes the first 10 backbone layers to prevent catastrophic forgetting while adapting the neck and head to person-only detection.
-
-### Evaluation Results (Strategy A — Test Set)
+### Evaluation Results (Strategy A — Validation Set, Epoch 38)
 
 | Metric | Value |
 |--------|-------|
 | **mAP@0.5** | **0.739** (+0.008 vs baseline) |
-| **mAP@0.5:0.95** | **0.493** (+0.013 vs baseline) |
+| **mAP@0.5:0.95** | **0.493** (+0.016 vs baseline) |
 | Precision | 77.3% |
 | Recall | 67.4% |
 | Best Epoch | 38 / 43 |
