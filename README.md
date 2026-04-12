@@ -1,144 +1,88 @@
-# Person Tracker YOLOv11
+# 🎯 Person Tracker YOLOv11
 
-Sistem deteksi dan pelacakan orang (*person tracking*) berbasis deep learning menggunakan **YOLOv11** pretrained pada dataset **COCO-2017**, dengan algoritma tracking **ByteTrack**.
-
----
-
-## Tujuan Proyek
-
-Mengembangkan sistem *Person Tracking* yang mampu:
-1. Mendeteksi orang dalam gambar menggunakan bounding box
-2. Mengevaluasi akurasi deteksi terhadap ground truth COCO
-3. Melacak identitas orang antar frame dalam video sintetis
+Sistem deteksi dan pelacakan orang (*person tracking*) berbasis deep learning menggunakan **YOLOv11** yang telah di-fine-tune secara khusus pada dataset **COCO-2017**, terintegrasi dengan algoritma *Multi-Object Tracking* **ByteTrack**, dan dilengkapi dengan antarmuka web interaktif menggunakan **Streamlit**.
 
 ---
 
-## Alur Kerja
+## 🚀 Fitur Utama
 
-```
-COCO-2017 Dataset
-      ↓
-Filter: Person Only
-      ↓
-YOLOv11 Inference (Pretrained)
-      ↓
-Evaluasi Deteksi (IoU, Precision, Recall, F1)
-      ↓
-Synthetic Video (30 frames COCO)
-      ↓
-ByteTrack Tracking
-      ↓
-Visualisasi & Output
-```
+1. **Deteksi Orang di Gambar**: Menggunakan model YOLOv11 yang di-fine-tune untuk mendeteksi individu secara akurat dengan bounding box dan confidence score.
+2. **Video Person Tracking**: Melacak pergerakan orang dalam video dari frame ke frame menggunakan algoritma **ByteTrack**, lengkap dengan penetapan ID unik untuk tiap individu.
+3. **End-to-End Data Science Pipeline**: Termasuk notebook Jupyter terpisah dari fase Akuisisi Data, Preprocessing, Training, Evaluasi, hingga Visualisasi.
+4. **Berbasis Antarmuka Web (Streamlit)**: GUI interaktif yang mudah digunakan untuk mendemonstrasikan sistem tanpa perlu coding, dengan dukungan tab untuk Tracking, Detection, dan Benchmarking metrik.
 
 ---
 
-## Hasil Evaluasi
+## 🛠️ Teknologi & Environment
 
-| Metrik | Nilai |
-|--------|-------|
-| **Precision** | 80.4% |
-| **Recall** | 73.4% |
-| **F1 Score** | 0.768 |
-| **Mean IoU (TP)** | 0.869 |
-| **Mean Confidence (TP)** | 0.714 |
-| **Mean Confidence (FP)** | 0.443 |
-| **TP / FP / FN** | 611 / 149 / 221 |
-| **Unique Tracking IDs** | 19 (dalam 30 frame) |
+- **Model Utama**: YOLOv11s & YOLOv11m (`ultralytics`, `torch`)
+- **Tracking Algorithm**: ByteTrack (dibantu oleh library `lap`)
+- **Frontend / Aplikasi Web**: `streamlit`
+- **Data & Dataset Ops**: `fiftyone` (Dataset COCO-2017), `pandas`, `numpy`
+- **Image & Video Processing**: `opencv-python-headless`, `Pillow`
+- **Visualisasi**: `matplotlib`, `seaborn`
 
 ---
 
-## Dataset
+## 📁 Struktur Direktori Proyek
 
-- **Sumber**: [FiftyOne Zoo — COCO-2017](https://docs.voxel51.com/dataset_zoo/datasets.html#coco-2017)
-- **Split**: Validation (200 samples) + Train (300 samples)
-- **Filter**: Hanya kelas `person`, semua anotasi non-person dihapus dari ground truth
-- **Alasan pemilihan COCO-2017**: Versi COCO terbaru di FiftyOne Zoo, konsisten dengan distribusi training YOLOv11, memiliki 257K+ anotasi person terverifikasi
+Proyek ini telah direstrukturisasi agar lebih modular dan bersih, memisahkan *pipeline* riset (Notebook) dan *production* web (Streamlit).
 
----
-
-## Model & Tracker
-
-| Komponen | Detail |
-|----------|--------|
-| **Model** | YOLOv11 Medium (`yolo11m.pt`) |
-| **Weights** | Pretrained COCO (tanpa fine-tuning) |
-| **Tracker** | ByteTrack (`bytetrack.yaml`) |
-| **Alasan ByteTrack** | MOTA 76.1% di MOT17, tidak perlu Re-ID, dual-threshold detection, Kalman Filter untuk prediksi posisi |
-| **Device** | CUDA (RTX 4060 Laptop GPU) |
-
----
-
-## Struktur Project
-
-```
+```text
 person-tracker-yolov11/
-├── full_executed.ipynb        # Notebook utama (sudah dieksekusi, dengan output lengkap)
-├── yolo11m.pt                 # Pretrained YOLOv11 weights
-├── output/
-│   ├── detection/
-│   │   ├── predicted_vs_groundtruth.png   # Grid 3x3: prediksi vs GT
-│   │   ├── evaluation_metrics.png         # 6 subplot metrik evaluasi
-│   │   └── dataset_distribution.png       # Distribusi jumlah person per gambar
-│   └── tracking/
-│       ├── coco_sequence.mp4              # Video sintetis dari 30 gambar COCO
-│       ├── tracked_output.mp4             # Video hasil tracking dengan ID dan trajektori
-│       ├── trajectory.png                 # Peta trajektori tracking
-│       ├── sample_frames.png              # Contoh frame hasil tracking
-│       └── tracking_statistics.png        # Statistik performa tracking
-└── README.md
+├── app.py                         # File Utama Web Streamlit
+├── requirements.txt               # Daftar environment & dependency
+├── .gitignore
+├── utils/                         # Modul Python untuk fungsi backend (modular)
+│   ├── detection.py               # Logic deteksi gambar
+│   ├── tracking.py                # Logic algoritma ByteTrack untuk video
+│   └── model.py                   # Load weights & model config
+├── Notebooks (AI Pipeline):       # Tahapan End-to-End Data Science
+│   ├── 01_data_acquisition.ipynb
+│   ├── 02_preprocessing_eda.ipynb
+│   ├── 03_training.ipynb
+│   ├── 04_evaluation.ipynb
+│   ├── 05_tuning.ipynb
+│   └── 06_visualization.ipynb
+├── data/                          # Tempat output dataset COCO diunduh
+├── output/                        # Hasil inferensi dan benchmarking
+├── runs/                          # Metrik dan curves hasil training YOLO
+└── *.pt                           # Model weights (yolo11s.pt, dll)
 ```
 
 ---
 
-## Konfigurasi Utama
+## 📈 Evaluasi Model
 
-```python
-DEVICE          = "cuda"      # GPU (RTX 4060 Laptop)
-PERSON_CLASS    = 0           # Index kelas person di COCO
-IOU_THRESHOLD   = 0.5         # Threshold matching prediksi ke GT
-CONF_THRESHOLD  = 0.25        # Threshold confidence deteksi
-VAL_SAMPLES     = 200         # Jumlah sampel validasi
-TRAIN_SAMPLES   = 300         # Jumlah sampel training
-SEQUENCE_LENGTH = 30          # Jumlah frame video sintetis
-```
+Model dalam repository ini merupakan hasil *fine-tuning* pada spesifik kelas `person` (menggunakan ~3000 gambar dari COCO-2017). Dibandingkan model pre-trained original:
+- **mAP@0.5**: Meningkat **0.739** (sebelumnya 0.731)
+- **mAP@0.5:0.95**: Meningkat **0.493** (sebelumnya 0.480)
+- Konvergensi lebih cepat (epoch 38) dengan hyperparameter khusus (Strategy A).
 
 ---
 
-## Dependencies
+## ⚙️ Petunjuk Instalasi & Eksekusi
 
-```
-ultralytics   # YOLOv11
-fiftyone      # Dataset management & FiftyOne Zoo
-opencv-python # Video processing
-matplotlib    # Visualisasi
-seaborn       # Plot styling
-numpy
-pandas
-tqdm
-lap           # ByteTrack dependency (data association)
-```
-
-Install:
+### 1. Instalasi Environment
+Disarankan untuk menggunakan `venv` atau `conda`. Jalankan perintah berikut untuk menginstal dependensinya:
 ```bash
-pip install ultralytics fiftyone opencv-python matplotlib seaborn numpy pandas tqdm lap
+pip install -r requirements.txt
 ```
+> **Catatan**: Jika diperlukan paket pendukung tambahan yang tiak ada di constraints, pastikan instalasi dilakukan seperti `pip install fiftyone lap`.
+
+### 2. Menjalankan Aplikasi Web Streamlit
+Jalankan perintah ini di root direktori proyek:
+```bash
+streamlit run app.py
+```
+Aplikasi akan secara otomatis terbuka pada browser default Anda (biasanya di alamat `http://localhost:8501`).
 
 ---
 
-## Visualisasi Output
+## 🧠 Menjalankan AI Pipeline (*Opsional*)
 
-| Warna Bounding Box | Keterangan |
-|--------------------|------------|
-| Hijau (solid) | Ground Truth |
-| Merah (solid) | True Positive (prediksi benar) |
-| Orange (solid) | False Positive (prediksi salah) |
-| Biru (dashed) | False Negative (GT tidak terdeteksi) |
+Jika Anda ingin meninjau metodologi bagaimana model ini dilatih, atau memperbarui dataset:
+Anda dapat membuka file bernomor pada Jupyter Notebook (`01_data_acquisition.ipynb` sampai `06_visualization.ipynb`) secara bertahap dan menjalankan *cell* eksekusi di sana yang berisi seluruh dokumentasi kode Data Science pipeline.
 
 ---
-
-## Notebook Utama
-
-Gunakan **`full_executed.ipynb`** — file ini berisi kode terbaru sekaligus semua hasil eksekusi (output, metrik, visualisasi).
-
-> File ini dijalankan menggunakan `python -m nbconvert --to notebook --execute` dengan GPU CUDA.
+*Proyek ini telah dioptimalkan untuk mendemonstrasikan proses AI Engineer & MLOps dasar dari pengumpulan data hingga deployment web app.*
